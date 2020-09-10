@@ -18,17 +18,23 @@ void LaneChanger::pointCallback(const sensor_msgs::PointCloud2ConstPtr &input) {
 	if(detectAngle_ > 10 && detectAngle_ < -10) {
 		local_obs_ = Cluster().cluster(input, 1, 13, -1, 1);
 		visualize(local_obs_);
-	}else { 
-		local_obs_ = Cluster().cluster(input, 1, 13, -1, 1);
-		visualize(local_obs_);
+	}else {
+		if (local_obs_.size() != 0){
+			local_obs_ = Cluster().cluster(input, 1, 13, -1, 1);
+			visualize(local_obs_);
 
-		if(getDist(local_obs_.at(0)) < DIST) {
-			isObsDetected_ = true;	
-			std_msgs::Bool obs;
-			obs.data = isObsDetected_;
-			pub_.publish(obs);
+			if(getDist(local_obs_.at(0)) < DIST) {
+				isObsDetected_ = true;	
+				std_msgs::Bool obs;
+				obs.data = isObsDetected_;
+				pub_.publish(obs);
 
-			isObsDetected_ = false;	
+				isObsDetected_ = false;
+			} else{
+				std_msgs::Bool obs;
+				obs.data = isObsDetected_;
+				pub_.publish(obs);
+			}
 		}	
 	}
 }
