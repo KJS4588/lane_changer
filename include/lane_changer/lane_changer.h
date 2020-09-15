@@ -37,7 +37,7 @@
 
 #define _USE_MATH_DEFINES
 #define DIST_0 7.0
-#define DIST_1 4.0
+#define DIST_1 6.0
 
 typedef pcl::PointXYZI PointType;
 
