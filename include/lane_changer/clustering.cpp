@@ -60,7 +60,7 @@ vector<geometry_msgs::Point> Cluster::cluster(const sensor_msgs::PointCloud2Cons
     vector<pcl::PointIndices> cluster_indices;
     pcl::EuclideanClusterExtraction<PointType> ec;
     ec.setClusterTolerance(1); //30cm
-    ec.setMinClusterSize(6);
+    ec.setMinClusterSize(100);
     ec.setMaxClusterSize(25000);
     ec.setSearchMethod(tree);
     ec.setInputCloud(cloud_filterd);
@@ -117,29 +117,9 @@ vector<geometry_msgs::Point> Cluster::cluster(const sensor_msgs::PointCloud2Cons
     mean_point.scale.y = 0.1;
 	
 	vector<geometry_msgs::Point> mean_p;
-    if (cluster_cloud2.size() != 0){
-        for (size_t i=0; i<cluster_cloud2.size(); i++){
-           // cout << cluster_cloud2[i].x << endl;
-            sum_x += cluster_cloud2[i].x;
-            sum_y += cluster_cloud2[i].y;
-            sum_z += cluster_cloud2[i].z;
-        
-        }
-    
-        geometry_msgs::Point p_;
-
-        p_.x = sum_x / cluster_cloud2.size();
-        p_.y = sum_y / cluster_cloud2.size();
-        p_.z = sum_z / cluster_cloud2.size();
-
-        mean_point.points.push_back(p_);
-		mean_p.push_back(p_);
-		sum_x = 0; sum_y = 0; sum_z = 0;
-    }
-
-	if (cluster_cloud1.size() != 0){
+    if (cluster_cloud1.size() != 0){
         for (size_t i=0; i<cluster_cloud1.size(); i++){
-           // cout << cluster_cloud1[i].x << endl;
+           // cout << cluster_cloud2[i].x << endl;
             sum_x += cluster_cloud1[i].x;
             sum_y += cluster_cloud1[i].y;
             sum_z += cluster_cloud1[i].z;
@@ -151,6 +131,26 @@ vector<geometry_msgs::Point> Cluster::cluster(const sensor_msgs::PointCloud2Cons
         p_.x = sum_x / cluster_cloud1.size();
         p_.y = sum_y / cluster_cloud1.size();
         p_.z = sum_z / cluster_cloud1.size();
+
+        mean_point.points.push_back(p_);
+		mean_p.push_back(p_);
+		sum_x = 0; sum_y = 0; sum_z = 0;
+    }
+
+	if (cluster_cloud2.size() != 0){
+        for (size_t i=0; i<cluster_cloud2.size(); i++){
+           // cout << cluster_cloud1[i].x << endl;
+            sum_x += cluster_cloud2[i].x;
+            sum_y += cluster_cloud2[i].y;
+            sum_z += cluster_cloud2[i].z;
+        
+        }
+    
+        geometry_msgs::Point p_;
+
+        p_.x = sum_x / cluster_cloud2.size();
+        p_.y = sum_y / cluster_cloud2.size();
+        p_.z = sum_z / cluster_cloud2.size();
 
         mean_point.points.push_back(p_);
 		mean_p.push_back(p_);

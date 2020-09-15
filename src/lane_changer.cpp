@@ -4,38 +4,56 @@ void LaneChanger::initSetup() {
 	pub_ = nh_.advertise<std_msgs::Bool>("/static_obs", 10);
     marker_pub_ = nh_.advertise<visualization_msgs::Marker>("/output_points", 10);
     sub_ = nh_.subscribe("/velodyne_points", 10, &LaneChanger::pointCallback, this);
+    lane_sub_ = nh_.subscribe("/target_state", 10, &LaneChanger::laneNumCallback, this);
 	acker_sub_ = nh_.subscribe("/ctrl_cmd", 10, &LaneChanger::ackermannCallback, this);
 	
 	isObsDetected_ = false;
 	detectAngle_ = 0;
+	cur_state_ = 0;
+	lane_number_ = 0;
+
 }
 
 
-//	0 : lane change when first obstacle detected 
+//	0 : lane change when first obstacle detected
 //  1 : ignore
+//
+
+void LaneChanger::laneNumCallback(const waypoint_maker::WaypointConstPtr &lane_num) {
+	lane_number_ = lane_num->lane_number;
+}
 
 void LaneChanger::pointCallback(const sensor_msgs::PointCloud2ConstPtr &input) {
-	if(detectAngle_ > 10 && detectAngle_ < -10) {
-		local_obs_ = Cluster().cluster(input, 1, 13, -1, 1);
-		visualize(local_obs_);
-	}else {
-		if (local_obs_.size() != 0){
-			local_obs_ = Cluster().cluster(input, 1, 13, -1, 1);
+	nh_.getParam("kuuve_state", cur_state_);
+
+	if (cur_state_ == 2){
+		if(detectAngle_ > 10 && detectAngle_ < -10) {
+			local_obs_ = Cluster().cluster(input, 0, 0, 0, 0);
 			visualize(local_obs_);
+		}else {
+			local_obs_ = Cluster().cluster(input, 1, 13, -1, 1);
 
-			if(getDist(local_obs_.at(0)) < DIST) {
-				isObsDetected_ = true;	
-				std_msgs::Bool obs;
-				obs.data = isObsDetected_;
-				pub_.publish(obs);
+			if (local_obs_.size() != 0){
+				visualize(local_obs_);
 
-				isObsDetected_ = false;
-			} else{
-				std_msgs::Bool obs;
-				obs.data = isObsDetected_;
-				pub_.publish(obs);
-			}
-		}	
+				double dist = (lane_number_ == 0) ? DIST_0 : DIST_1;
+					
+				cout << "dist = " << dist << endl;
+				cout << "obs_dist = " << getDist(local_obs_.at(0)) << endl;
+				if(getDist(local_obs_.at(0)) < dist) {
+					isObsDetected_ = true;	
+					std_msgs::Bool obs;
+					obs.data = isObsDetected_;
+					pub_.publish(obs);
+
+					isObsDetected_ = false;
+				} else{
+					std_msgs::Bool obs;
+					obs.data = isObsDetected_;
+					pub_.publish(obs);
+				}
+			}	
+		}
 	}
 }
 
@@ -45,7 +63,7 @@ void LaneChanger::ackermannCallback(const ackermann_msgs::AckermannDriveStampedC
 }
 
 double LaneChanger::getDist(geometry_msgs::Point p){
-	return sqrt(pow(p.x - 0, 2) + pow(p.y - 0, 2));
+	return sqrt(pow(p.x - 0, 2) + pow(p.y - 0, 2) + pow(p.z - 0, 2));
 }
 
 void LaneChanger::visualize(vector<geometry_msgs::Point> input_points) {

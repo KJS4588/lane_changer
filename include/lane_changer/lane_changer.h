@@ -5,6 +5,8 @@
 #include "ackermann_msgs/AckermannDriveStamped.h"
 #include "geometry_msgs/Point.h"
 
+#include "waypoint_maker/Waypoint.h"
+
 #include "pcl_conversions/pcl_conversions.h"
 #include "pcl_ros/point_cloud.h"
 #include "pcl_ros/transforms.h"
@@ -34,7 +36,8 @@
 #include "clustering.cpp"
 
 #define _USE_MATH_DEFINES
-#define DIST 5.0
+#define DIST_0 7.0
+#define DIST_1 4.0
 
 typedef pcl::PointXYZI PointType;
 
@@ -49,7 +52,7 @@ private:
     ros::Publisher marker_pub_;
 
 	//subscriber
-    ros::Subscriber sub_;
+    ros::Subscriber sub_, lane_sub_;
 	ros::Subscriber acker_sub_;
 
 	//vector
@@ -58,10 +61,13 @@ private:
 	//various
 	double detectAngle_;
 	int isObsDetected_;
+	int cur_state_;
+	int lane_number_;
 
 public:
     void initSetup();
     void pointCallback(const sensor_msgs::PointCloud2ConstPtr &input);
+    void laneNumCallback(const waypoint_maker::WaypointConstPtr &lane_num);
 	void ackermannCallback(const ackermann_msgs::AckermannDriveStampedConstPtr &acker);
 	void visualize(vector<geometry_msgs::Point> obs_points);
 
